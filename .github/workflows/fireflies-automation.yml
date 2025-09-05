@@ -1,0 +1,43 @@
+name: Fireflies to Google Drive Automation
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  process-transcripts:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Create Google Drive credentials file
+      run: |
+        mkdir -p ~/.config/google-drive
+        echo "${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}" > ~/.config/google-drive/credentials.json
+        
+    - name: Run Fireflies automation
+      env:
+        FIREFLIES_API_KEY: ${{ secrets.FIREFLIES_API_KEY }}
+        GOOGLE_APPLICATION_CREDENTIALS: ~/.config/google-drive/credentials.json
+        GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+      run: |
+        # Process transcripts from last hour (to avoid duplicates)
+        node index.js --hours 1
+        
+    - name: Upload results to Google Drive
+      if: always()
+      run: |
+        echo "Automation completed at $(date)"

@@ -52,7 +52,7 @@ class FileNameService {
         date = new Date();
       }
       
-      // Format as mm-dd-yy_hh:MM_AM/PM
+      // Format as mm-dd-yy_hh-MM AM-PM (using dashes to avoid filesystem issues)
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const day = date.getDate().toString().padStart(2, '0');
       const year = date.getFullYear().toString().slice(-2); // Last 2 digits of year
@@ -65,7 +65,7 @@ class FileNameService {
       hours = hours ? hours : 12; // 0 should be 12
       const formattedHours = hours.toString().padStart(2, '0');
       
-      return `${month}-${day}-${year}_${formattedHours}:${minutes}_${ampm}`;
+      return `${month}-${day}-${year}_${formattedHours}-${minutes} ${ampm}`;
     } catch (error) {
       console.error('Error formatting date:', error);
       const now = new Date();
