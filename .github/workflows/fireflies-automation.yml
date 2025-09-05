@@ -23,19 +23,15 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    - name: Create Google Drive credentials file
-      run: |
-        mkdir -p ~/.config/google-drive
-        echo "${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}" > ~/.config/google-drive/credentials.json
-        
     - name: Run Fireflies automation
       env:
         FIREFLIES_API_KEY: ${{ secrets.FIREFLIES_API_KEY }}
-        GOOGLE_APPLICATION_CREDENTIALS: ~/.config/google-drive/credentials.json
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
         GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+        LOOKBACK_HOURS: 1
       run: |
-        # Process transcripts from last hour (to avoid duplicates)
-        node index.js --hours 1
+        # Use cloud-compatible version
+        node cloud-index.js
         
     - name: Upload results to Google Drive
       if: always()
