@@ -23,17 +23,32 @@ jobs:
     - name: Install dependencies
       run: npm install
       
+    - name: Setup Google Drive sync directory
+      run: |
+        mkdir -p "/home/runner/Google Drive/Customer Call Transcripts"
+        
     - name: Run Fireflies automation
       env:
         FIREFLIES_API_KEY: ${{ secrets.FIREFLIES_API_KEY }}
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
-        GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+        GOOGLE_DRIVE_LOCAL_PATH: "/home/runner/Google Drive"
+        GOOGLE_DRIVE_TARGET_FOLDER: "Customer Call Transcripts"
         LOOKBACK_HOURS: 1
       run: |
-        # Use cloud-compatible version
-        node cloud-index.js
+        # Use local Google Drive approach
+        node cloud-local.js
         
-    - name: Upload results to Google Drive
+    - name: Upload PDFs to your Google Drive
       if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fireflies-transcripts-${{ github.run_number }}
+        path: "/home/runner/Google Drive/Customer Call Transcripts/*.pdf"
+        retention-days: 7
+        
+    - name: Sync to your Google Drive via API
+      env:
+        FIREFLIES_API_KEY: ${{ secrets.FIREFLIES_API_KEY }}
+        GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
       run: |
-        echo "Automation completed at $(date)"
+        # Upload generated PDFs to your actual Google Drive
+        node upload-to-drive.js
